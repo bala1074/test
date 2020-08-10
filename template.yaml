@@ -1,0 +1,86 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Transform: AWS::Serverless-2016-10-31
+Description: Forward logs, metrics and traces from AWS to CT.
+Mappings:
+  Constants:
+    DdForwarder:
+      Version: 0.1.0
+Parameters:
+  DdApiKey:
+    Type: String
+    NoEcho: true
+    AllowedPattern: .+
+    Description: The Datadog API key, which can be found from the APIs page (/account/settings#api). It will be stored in AWS Secrets Manager securely. If DdApiKeySecretArn is also set, this value will not be used. This value must still be set, however.
+Conditions:
+  CreateDdApiKeySecret:
+    Fn::Equals:
+      - Ref: DdApiKeySecretArn
+      - "arn:aws:secretsmanager:DEFAULT"
+Resources:
+
+Outputs:
+  DatadogForwarderArn:
+    Description: Datadog Forwarder Lambda Function ARN
+    Value:
+      Fn::GetAtt:
+        - Forwarder
+        - Arn
+    Export:
+      Name:
+        Fn::Sub: ${AWS::StackName}-ForwarderArn
+Metadata:
+  AWS::CloudFormation::Interface:
+    ParameterGroups:
+      - Label:
+          default: Required
+        Parameters:
+          - DdApiKey
+          - DdSite
+      - Label:
+          default: Lambda Function (Optional)
+        Parameters:
+          - FunctionName
+          - MemorySize
+          - Timeout
+          - ReservedConcurrency
+          - LogRetentionInDays
+      - Label:
+          default: Log Forwarding (Optional)
+        Parameters:
+          - DdTags
+          - DdMultilineLogRegexPattern
+          - DdUseTcp
+          - DdNoSsl
+          - DdUrl
+          - DdPort
+          - DdSkipSslValidation
+          - DdUseCompression
+          - DdCompressionLevel
+          - DdForwardLog
+      - Label:
+          default: Log Scrubbing (Optional)
+        Parameters:
+          - RedactIp
+          - RedactEmail
+          - DdScrubbingRule
+          - DdScrubbingRuleReplacement
+      - Label:
+          default: Log Filtering (Optional)
+        Parameters:
+          - ExcludeAtMatch
+          - IncludeAtMatch
+      - Label:
+          default: Experimental (Optional)
+        Parameters:
+          - DdFetchLambdaTags
+      - Label:
+          default: Advanced (Optional)
+        Parameters:
+          - SourceZipUrl
+          - PermissionsBoundaryArn
+          - DdApiKeySecretArn
+    ParameterLabels:
+      DdApiKey:
+        default: "DdApiKey *"
+      DdSite:
+        default: "DdSite *"
